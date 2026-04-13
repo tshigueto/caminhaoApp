@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html xmlns:th="http://thymeleaf.org" xmlns:sec="http://thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>CaminhaoApp - Rotas e Entregas</title><link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+    <style>
+        .btn-upload { cursor: pointer; }
+        input[type="file"] { display: none; }
+    </style>
+</head>
+<body class="container mt-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Painel de Rotas</h2>
+        <a th:href="@{/}" class="btn btn-outline-secondary">Voltar ao Início</a>
+    </div>
+
+    <div class="card p-4 mb-5 shadow-sm" sec:authorize="hasAnyRole('ADMIN', 'EMPRESA')">
+        <h5>Cadastrar Nova Rota</h5>
+        <form th:action="@{/rotas/salvar}" method="post" class="row g-3">
+            <div class="col-md-3">
+                <input type="text" name="cepPartida" class="form-control" placeholder="CEP Origem" required>
+            </div>
+            <div class="col-md-3">
+                <input type="text" name="cepDestino" class="form-control" placeholder="CEP Destino" required>
+            </div>
+            <div class="col-md-4">
+                <input type="text" name="cpfMotorista" class="form-control" placeholder="CPF do Motorista (Somente números)" required>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100">Atribuir</button>
+            </div>
+        </form>
+    </div>
+
+    <table class="table table-hover align-middle shadow-sm">
+        <thead class="table-dark">
+            <tr>
+                <th>Origem/Destino</th>
+                <th>Motorista</th>
+                <th>Horários (Saída/Chegada/Fim)</th>
+                <th>Status Fotos</th>
+                <th>Ações do Motorista</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr th:each="r : ${rotas}">
+                <td>
+                    <strong th:text="${r.cepPartida}"></strong> ➔ <strong th:text="${r.cepDestino}"></strong>
+                </td>
+                <td th:text="${r.motorista.nome}">Motorista</td>
+                <td style="font-size: 0.85rem;">
+                    <b>S:</b> <span th:text="${r.horarioSaida != null ? #temporals.format(r.horarioSaida, 'dd/MM HH:mm') : '--'}"></span><br>
+                    <b>C:</b> <span th:text="${r.inicioEntrega != null ? #temporals.format(r.inicioEntrega, 'dd/MM HH:mm') : '--'}"></span><br>
+                    <b>F:</b> <span th:text="${r.fimEntrega != null ? #temporals.format(r.fimEntrega, 'dd/MM HH:mm') : '--'}"></span>
+                </td>
+                <td>
+                    <span th:class="${r.fotoChegadaPath != null ? 'badge bg-success' : 'badge bg-secondary'}">Foto de llegada</span>
+                    <span th:class="${r.fotoFinalizacaoPath != null ? 'badge bg-success' : 'badge bg-secondary'}">Foto de salida</span>
+                </td>
+                <td>
+                    <a th:if="${r.horarioSaida == null}" 
+                       th:href="@{/rotas/iniciar/{id}(id=${r.id})}" 
+                       class="btn btn-dark btn-sm">▶ Iniciar Saída</a>
+
+                    <form th:if="${r.horarioSaida != null}" 
+                          th:action="@{/fotos/upload/{id}/chegada(id=${r.id})}" 
+                          method="post" enctype="multipart/form-data" class="d-inline">
+                        <input type="file" name="arquivo" th:id="'fileC' + ${r.id}" onchange="this.form.submit()">
+                        <label th:for="'fileC' + ${r.id}" class="btn btn-info btn-sm">
+                           <span th:text="${r.fotoChegadaPath == null ? '📸 Foto de llegada' : '🔄 Nova Foto Chegada'}"></span>
+                        </label>
+                    </form>
+
+                    <form th:if="${r.fotoChegadaPath != null}" 
+                          th:action="@{/fotos/upload/{id}/finalizacao(id=${r.id})}" 
+                          method="post" enctype="multipart/form-data" class="d-inline">
+                        <input type="file" name="arquivo" th:id="'fileF' + ${r.id}" onchange="this.form.submit()">
+                        <label th:for="'fileF' + ${r.id}" class="btn btn-success btn-sm">
+                           <span th:text="${r.fotoFinalizacaoPath == null ? '🏁 Foto de salida' : '🔄 Nova Foto Fim'}"></span>
+                        </label>
+                    </form>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</body>
+</html>

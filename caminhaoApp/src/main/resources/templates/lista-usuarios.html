@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html xmlns:th="http://thymeleaf.org" xmlns:sec="http://thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <title>CaminhaoApp - Dashboard</title>
+    <title>CaminhaoApp - Dashboard</title><link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+    <style>
+        .section-title { border-left: 5px solid #0d6efd; padding-left: 15px; margin-bottom: 20px; }
+        .admin-section { border-left-color: #dc3545; }
+        input[type="file"] { display: none; }
+    </style>
+</head>
+<body class="container mt-5">
+
+    <div class="d-flex justify-content-between align-items-center mb-5 pb-3 border-bottom">
+        <div>
+            <h2>CaminhaoApp</h2>
+            <p class="text-muted">Olá, <b th:text="${usuarioLogado.nome}"></b> (<span th:text="${usuarioLogado.perfil}"></span>)</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a sec:authorize="hasAnyRole('ADMIN', 'EMPRESA')" th:href="@{/usuarios/novo}" class="btn btn-success">+ Novo Usuário</a>
+            <form th:action="@{/logout}" method="post"><button type="submit" class="btn btn-outline-danger">Sair</button></form>
+        </div>
+    </div>
+
+    <div class="mb-5" sec:authorize="hasAnyRole('ADMIN', 'EMPRESA')">
+        <h4 class="section-title admin-section text-danger">Gestão de Perfis</h4>
+        <div class="card shadow-sm">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr><th>Nome</th><th>CPF</th><th>Perfil</th><th>Ações</th></tr>
+                </thead>
+                <tbody>
+                    <tr th:each="u : ${usuarios}">
+                        <td th:text="${u.nome}"></td>
+                        <td th:text="${u.cpf}"></td>
+                        <td><span class="badge bg-secondary" th:text="${u.perfil}"></span></td>
+                        <td>
+                            <a th:href="@{/usuarios/editar/{id}(id=${u.id})}" class="btn btn-sm btn-warning">Editar</a>
+                            <a th:href="@{/usuarios/excluir/{id}(id=${u.id})}" class="btn btn-sm btn-danger" onclick="return confirm('Excluir?')">Excluir</a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="mb-5" sec:authorize="hasAnyRole('ADMIN', 'EMPRESA')">
+        <h4 class="section-title text-primary">Cadastrar Nova Rota</h4>
+        <div class="card p-4 shadow-sm">
+            <form th:action="@{/rotas/salvar}" method="post" class="row g-3">
+                <div class="col-md-3"><input type="text" name="cepPartida" class="form-control" placeholder="CEP Origem" required></div>
+                <div class="col-md-3"><input type="text" name="cepDestino" class="form-control" placeholder="CEP Destino" required></div>
+                <div class="col-md-4">
+                    <select name="cpfMotorista" class="form-control" required>
+                        <option value="" disabled selected>Selecione o Motorista...</option>
+                        <option th:each="m : ${listaMotoristas}" th:value="${m.cpf}" th:text="${m.nome + ' - ' + m.cpf}"></option>
+                    </select>
+                </div>
+                <div class="col-md-2"><button type="submit" class="btn btn-primary w-100">Atribuir</button></div>
+            </form>
+        </div>
+    </div>
+
+    <h4 class="section-title">Acompanhamento de Entregas</h4>
+    <div class="card shadow-sm">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-dark">
+                <tr><th>Rota</th><th>Motorista</th><th>Horários</th><th>Fotos</th><th sec:authorize="hasRole('CAMINHONEIRO')">Ações</th></tr>
+            </thead>
+            <tbody>
+                <tr th:each="r : ${rotas}">
+                    <td><span th:text="${r.cepPartida}"></span> ➔ <span th:text="${r.cepDestino}"></span></td>
+                    <td th:text="${r.motorista != null ? r.motorista.nome : 'Pendente'}"></td>
+                    <td style="font-size: 0.85rem;">
+                        <div th:if="${r.horarioSaida != null}">🚚 <span th:text="${#temporals.format(r.horarioSaida, 'dd/MM HH:mm')}"></span></div>
+                        <div th:if="${r.inicioEntrega != null}">📍 <span th:text="${#temporals.format(r.inicioEntrega, 'dd/MM HH:mm')}"></span></div>
+                        <div th:if="${r.fimEntrega != null}">🏁 <span th:text="${#temporals.format(r.fimEntrega, 'dd/MM HH:mm')}"></span></div>
+                    </td>
+                    <td>
+                        <div class="d-flex flex-column gap-1">
+                            <a th:if="${r.fotoChegadaPath != null}" th:href="@{'/uploads/' + ${r.fotoChegadaPath}}" target="_blank" class="btn btn-sm btn-outline-primary py-0">Chegada</a>
+                            <a th:if="${r.fotoFinalizacaoPath != null}" th:href="@{'/uploads/' + ${r.fotoFinalizacaoPath}}" target="_blank" class="btn btn-sm btn-outline-success py-0">Saída</a>
+                        </div>
+                    </td>
+                    <td sec:authorize="hasRole('CAMINHONEIRO')">
+                        <div th:if="${r.motorista != null && r.motorista.cpf == usuarioLogado.cpf}">
+                            <a th:if="${r.horarioSaida == null}" th:href="@{/rotas/iniciar/{id}(id=${r.id})}" class="btn btn-dark btn-sm w-100">▶ Iniciar</a>
+                            <form th:if="${r.horarioSaida != null && r.fotoChegadaPath == null}" th:action="@{/fotos/upload/{id}/chegada(id=${r.id})}" method="post" enctype="multipart/form-data">
+                                <label th:for="'fC'+${r.id}" class="btn btn-primary btn-sm w-100">📸 Foto Chegada</label>
+                                <input type="file" name="arquivo" th:id="'fC'+${r.id}" onchange="this.form.submit()">
+                            </form>
+                            <form th:if="${r.fotoChegadaPath != null && r.fotoFinalizacaoPath == null}" th:action="@{/fotos/upload/{id}/finalizacao(id=${r.id})}" method="post" enctype="multipart/form-data">
+                                <label th:for="'fF'+${r.id}" class="btn btn-success btn-sm w-100">🏁 Finalizar</label>
+                                <input type="file" name="arquivo" th:id="'fF'+${r.id}" onchange="this.form.submit()">
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>

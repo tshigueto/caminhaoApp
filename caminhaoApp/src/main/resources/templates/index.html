@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html xmlns:th="http://thymeleaf.org" xmlns:sec="http://thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>CaminhaoApp - Dashboard</title>
+    <title>CaminhaoApp - Dashboard</title><link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+    <style>
+        .card-menu { transition: 0.3s; cursor: pointer; text-decoration: none; color: inherit; border: none; border-radius: 15px; }
+        .card-menu:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.1); background-color: #fff; }
+        .display-4 { filter: grayscale(0.2); }
+    </style>
+</head>
+<body class="bg-light">
+
+    <nav class="navbar navbar-dark bg-dark mb-5 shadow-sm">
+        <div class="container">
+            <span class="navbar-brand fw-bold">CaminhaoApp | Sistema de Logística</span>
+            <div class="d-flex align-items-center">
+                <span class="text-white me-3 small" th:text="'Olá, ' + ${#authentication.name}">Usuário</span>
+                <form th:action="@{/logout}" method="post">
+                    <button type="submit" class="btn btn-outline-light btn-sm">Sair</button>
+                </form>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="row g-4 justify-content-center">
+            
+            <div class="col-md-4" sec:authorize="hasRole('ADMIN')">
+                <a th:href="@{/usuarios/listar}" class="card card-menu h-100 p-4 text-center shadow-sm">
+                    <div class="display-4 mb-2">👥</div>
+                    <h4>Gerenciar Perfis</h4>
+                    <p class="text-muted">Controle total de empresas, motoristas e acessos.</p>
+                </a>
+            </div>
+
+            <div class="col-md-4" sec:authorize="hasAnyRole('ADMIN', 'EMPRESA')">
+                <a th:href="@{/usuarios/listar}" class="card card-menu h-100 p-4 text-center shadow-sm">
+                    <div class="display-4 mb-2">🚚</div>
+                    <h4>Painel de Rotas</h4>
+                    <p class="text-muted">Gerenciar viagens, atribuir motoristas e monitorar.</p>
+                </a>
+            </div>
+
+            <div class="col-md-4" sec:authorize="hasRole('CAMINHONEIRO')">
+                <a th:href="@{/usuarios/listar}" class="card card-menu h-100 p-4 text-center shadow-sm">
+                    <div class="display-4 mb-2">📍</div>
+                    <h4>Minhas Entregas</h4>
+                    <p class="text-muted">Acessar suas rotas, iniciar viagens e enviar fotos.</p>
+                </a>
+            </div>
+
+        </div>
+    </div>
+
+    <script src="https://jsdelivr.net"></script>
+</body>
+</html>

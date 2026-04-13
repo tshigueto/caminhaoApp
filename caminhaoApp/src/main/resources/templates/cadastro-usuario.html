@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" 
+      xmlns:sec="http://thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>CaminhaoApp - Cadastro de Usuário</title>
+    <title>CaminhaoApp - Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+    <style>
+        body { background-color: #f4f7f6; display: flex; align-items: center; min-height: 100vh; font-family: 'Segoe UI', sans-serif; }
+        .card { max-width: 500px; width: 100%; border: none; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); margin: auto; }
+        .card-header { background: #0d6efd; color: white; border-radius: 15px 15px 0 0 !important; text-align: center; padding: 20px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="card">
+        <div class="card-header">
+            <h3 class="mb-0" th:text="${usuario.id == null ? 'Novo Usuário' : 'Editar Usuário'}">Cadastro</h3>
+            <small th:text="${usuario.id == null ? 'Preencha os dados abaixo' : 'Atualize as informações do perfil'}"></small>
+        </div>
+        
+        <div class="card-body p-4">
+            <form th:action="@{/usuarios/salvar}" th:object="${usuario}" method="post">
+                <input type="hidden" th:field="*{id}">
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Nome Completo</label>
+                    <input type="text" th:field="*{nome}" class="form-control" required placeholder="Ex: João Silva">
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold">CPF (Login do Sistema)</label>
+                    <input type="text" th:field="*{cpf}" id="cpfInput" class="form-control" 
+                           required placeholder="000.000.000-00" maxlength="14">
+                    <div class="form-text text-muted small">Apenas números. Este será o login.</div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold">E-mail</label>
+                    <input type="email" th:field="*{email}" class="form-control" required placeholder="email@exemplo.com">
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Senha de Acesso</label>
+                    <input type="password" th:field="*{senha}" class="form-control" 
+                           th:required="${usuario.id == null}" placeholder="Digite a senha">
+                    
+                    <div th:if="${usuario.id != null}" class="alert alert-warning py-1 px-2 mt-2 mb-0 small">
+                        ⚠️ Deixe em <b>branco</b> para manter a senha atual.
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label fw-bold">Perfil de Acesso</label>
+                    <select th:field="*{perfil}" class="form-select" required>
+                        <option value="" disabled selected>Selecione o nível...</option>
+                        
+                        <option sec:authorize="hasRole('ADMIN')" value="ADMIN">Administrador Master</option>
+                        
+                        <option value="EMPRESA">Empresa Logística</option>
+                        <option value="CAMINHONEIRO">Motorista / Caminhoneiro</option>
+                    </select>
+                </div>
+
+                <div class="d-grid gap-2">
+                    <button type="submit" class="btn btn-primary btn-lg">Salvar Dados</button>
+                    <a th:href="@{/usuarios/listar}" class="btn btn-light">Cancelar e Voltar</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.getElementById('cpfInput').addEventListener('input', function (e) {
+        let value = e.target.value.replace(/\D/g, "");
+        value = value.replace(/(\d{3})(\d)/, "$1.$2");
+        value = value.replace(/(\d{3})(\d)/, "$1.$2");
+        value = value.replace(/(\d{3})(\d{1,2})$/, "$1-$2");
+        e.target.value = value;
+    });
+</script>
+
+</body>
+</html>
